@@ -1,209 +1,1234 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hacking Dashboard</title>
-  <style>
-    body {
-      font-family: 'Courier New', Courier, monospace;
-      background-color: #000;
-      color: #0f0;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-    }
-    #app {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-    }
-    .modal {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: rgba(0, 0, 0, 0.7);
-      border: 2px solid #0f0;
-      padding: 2rem;
-      z-index: 1000;
-    }
-    .hidden {
-      display: none;
-    }
-    .progress-bar {
-      width: 100%;
-      height: 20px;
-      background-color: #333;
-      border: 1px solid #0f0;
-      margin-bottom: 1rem;
-    }
-    .console {
-      background-color: #000;
-      color: #0f0;
-      padding: 1rem;
-      border: 1px solid #0f0;
-      overflow-y: auto;
-    }
-    .tool-card {
-      background-color: #111;
-      color: #0f0;
-      padding: 1rem;
-      border: 1px solid #0f0;
-      margin-bottom: 1rem;
-      cursor: pointer;
-    }
-    .panel-section {
-      margin-bottom: 1rem;
-    }
-    .feed, .alerts, #recent-extractions tbody {
-      background-color: #111;
-      color: #0f0;
-      border: 1px solid #0f0;
-      padding: 1rem;
-    }
-    #hex-viewer {
-      background-color: #111;
-      color: #0f0;
-      padding: 1rem;
-      border: 1px solid #0f0;
-      white-space: pre-wrap;
-    }
-    .toast {
-      background-color: #ff0000;
-      color: #fff;
-      padding: 0.5rem;
-      border-radius: 4px;
-      position: absolute;
-      bottom: 1rem;
-      left: 50%;
-      transform: translateX(-50%);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-  </style>
-</head>
-<body>
-  <div id="app">
-    <div id="lockscreen" class="modal">
-      <h2>ENTER PASSCODE</h2>
-      <div class="keypad">
-        <!-- Keypad buttons here -->
-      </div>
-      <div id="wrongPassToast" class="toast">ACCESS DENIED — TRY AGAIN</div>
-    </div>
-    <div id="loadingScreen" class="hidden">
-      <div class="progress-bar"></div>
-      <div id="bootLines" class="console">
-        <div>LOADING ... MODULES: UI_RENDER</div>
-        <div>LOADING ... MODULES: AUDIO_DRIVER</div>
-        <div>LOADING ... MODULES: SIM_ENGINE</div>
-      </div>
-    </div>
-    <div id="dashboard" class="hidden">
-      <header>
-        <div class="header-text">Admin: Naresh</div>
-        <div class="status-badges">
-          <span>ENV: SIM</span>
-          <span>SESSION: 00:05:30</span>
-        </div>
-      </header>
-      <aside id="sidebar">
-        <div class="tool-card" data-tool="recon">Recon</div>
-        <div class="tool-card" data-tool="port-scan">Port Scan</div>
-        <div class="tool-card" data-tool="password-cracker">BruteForcer</div>
-        <div class="tool-card" data-tool="network-map">Network Map</div>
-        <div class="tool-card" data-tool="log-viewer">Log Viewer</div>
-        <div class="tool-card" data-tool="payload-simulator">Exploit Lab</div>
-        <div class="tool-card" data-tool="terminal">Terminal</div>
-      </aside>
-      <main id="main-panel">
-        <div id="active-tool-console" class="console">
-          <!-- Tool-specific console here -->
-        </div>
-      </main>
-      <aside id="right-panel">
-        <div class="panel-section">
-          <h3>Activity Feed</h3>
-          <div id="activity-feed" class="feed"></div>
-        </div>
-        <div class="panel-section">
-          <h3>Alerts</h3>
-          <div id="alerts" class="alerts"></div>
-        </div>
-        <div class="panel-section">
-          <h3>Recent Extractions</h3>
-          <table id="recent-extractions">
-            <thead><tr><th>ID</th><th>Data</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div class="panel-section">
-          <h3>Hex Viewer</h3>
-          <pre id="hex-viewer"></pre>
-        </div>
-      </aside>
-    </div>
-  </div>
-  <script>
-    const PASSWORD = "659853";
-    function checkPassword(input) {
-      if (input === PASSWORD) {
-        playUnlockAnimation();
-        setTimeout(showDashboard, 2300);
-      } else {
-        showShakeModal();
-        showToast("ACCESS DENIED");
-      }
-    }
-    function simulateToolRun(toolName, userInput) {
-      writeConsoleLine(`[${toolName}] Target: ${sanitize(userInput)}`);
-      showProgress(0);
-      let p = 0;
-      const t = setInterval(() => {
-        p += Math.floor(Math.random() * 20) + 10;
-        updateProgress(p);
-        appendConsoleLine(`${toolName}: processing ${p}%`);
-        if (p >= 100) {
-          clearInterval(t);
-          appendConsoleLine(`${toolName}: COMPLETE — ACCESS GRANTED`);
-          showBadge("ACCESS GRANTED");
-          const fake = {
-            id: `FAKE-${Math.floor(Math.random() * 9000) + 1000}`,
-            ip: `192.0.2.${Math.floor(Math.random() * 200) + 1}`,
-            username: `sim_user_${Math.floor(Math.random() * 99)}`,
-            note: "THIS IS A SIMULATED RESPONSE"
-          };
-          displayFakeData(fake);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberHUD | Admin Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=Share+Tech+Mono&display=swap');
+        .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
         }
-      }, 300);
-    }
-    function sanitize(input) {
-      return input.replace(/[<>]/g, '');
-    }
-    function playUnlockAnimation() {}
-    function showDashboard() {
-      document.getElementById('lockscreen').classList.add('hidden');
-      document.getElementById('loadingScreen').classList.remove('hidden');
-      setTimeout(() => {
-        document.getElementById('loadingScreen').classList.add('hidden');
-        document.getElementById('dashboard').classList.remove('hidden');
-      }, 2300);
-    }
-    function showShakeModal() {}
-    function showToast(message) {
-      const toast = document.getElementById('wrongPassToast');
-      toast.textContent = message;
-      toast.style.opacity = '1';
-      setTimeout(() => {
-        toast.style.opacity = '0';
-      }, 2000);
-    }
-    function writeConsoleLine(line) {}
-    function showProgress(percent) {}
-    function appendConsoleLine(line) {}
-    function showBadge(message) {}
-    function displayFakeData(data) {}
-  </script>
+        .typewriter {
+            overflow: hidden;
+            border-right: 0.15em solid #00ff9d;
+            white-space: nowrap;
+            animation: blink-caret 0.75s step-end infinite;
+        }
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: #00ff9d; }
+        }
+        .hex-pattern {
+            background-image: 
+                radial-gradient(circle at center, rgba(0, 255, 157, 0.05) 0%, transparent 70%),
+                repeating-linear-gradient(45deg, rgba(0, 255, 157, 0.03) 0px, rgba(0, 255, 157, 0.03) 1px, transparent 1px, transparent 6px);
+        }
+    </style>
+</head>
+<body class="bg-black text-green-400 font-mono h-screen overflow-hidden crt relative" style="font-family: 'Share Tech Mono', monospace;">
+<!-- Loading Screen -->
+    <div id="loadingScreen" class="hidden fixed inset-0 bg-black z-40 flex flex-col items-center justify-center">
+        <div class="w-3/4 max-w-2xl mb-8">
+            <div class="h-1 bg-gray-800 mb-1">
+                <div id="progressBar" class="h-full bg-gradient-to-r from-cyan-400 to-green-400" style="width: 0%"></div>
+            </div>
+            <div id="bootLines" class="text-green-400 text-sm h-64 overflow-y-auto font-mono p-2 bg-black bg-opacity-50 border border-gray-800">
+                > INITIALIZING SIMULATION ENVIRONMENT<br>
+                > LOADING CYBERHUD INTERFACE<br>
+                > AUTHENTICATING ADMIN: NARESH<br>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Interface -->
+    <div id="mainInterface" class="hidden h-full flex flex-col">
+        <!-- Header -->
+        <div class="bg-black border-b border-gray-800 p-2 flex justify-between items-center">
+            <div class="flex items-center">
+                <span class="text-xl text-cyan-400" style="font-family: 'Major Mono Display', monospace;">CYBERHUD</span>
+                <span class="ml-4 text-green-400">ADMIN: NARESH</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-purple-400">ENV: SIM</span>
+                <span id="sessionTimer" class="text-sm text-yellow-400">SESSION: 00:00:00</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Left Sidebar -->
+            <div class="w-48 bg-gray-900 border-r border-gray-800 flex flex-col">
+                <div class="p-4 border-b border-gray-800 text-center text-green-400">TOOLS</div>
+                <div class="flex-1 overflow-y-auto">
+                    <div class="tool-item p-3 border-b border-gray-800 hover:bg-gray-800 cursor-pointer" onclick="activateTool('recon')">
+                        <i data-feather="eye" class="inline mr-2 text-cyan-400"></i> RECON
+                    </div>
+                    <div class="tool-item p-3 border-b border-gray-800 hover:bg-gray-800 cursor-pointer" onclick="activateTool('portscan')">
+                        <i data-feather="search" class="inline mr-2 text-cyan-400"></i> PORT SCAN
+                    </div>
+                <div class="tool-item p-3 border-b border-gray-800 hover:bg-gray-800 cursor-pointer" onclick="activateTool('hrtool')">
+                    <i data-feather="code" class="inline mr-2 text-cyan-400"></i> HR TOOL
+                </div>
+                <div class="tool-item p-3 border-b border-gray-800 hover:bg-gray-800 cursor-pointer" onclick="activateTool('bruteforce')">
+                    <i data-feather="lock" class="inline mr-2 text-cyan-400"></i> BRUTE FORCE
+                </div>
+<div class="tool-item p-3 border-b border-gray-800 hover:bg-gray-800 cursor-pointer" onclick="activateTool('networkmap')">
+                        <i data-feather="map" class="inline mr-2 text-cyan-400"></i> NETWORK MAP
+                    </div>
+                    <div class="tool-item p-3 border-b border-gray-800 hover:bg-gray-800 cursor-pointer" onclick="activateTool('logviewer')">
+                        <i data-feather="list" class="inline mr-2 text-cyan-400"></i> LOG VIEWER
+                    </div>
+                    <div class="tool-item p-3 border-b border-gray-800 hover:bg-gray-800 cursor-pointer" onclick="activateTool('payload')">
+                        <i data-feather="cpu" class="inline mr-2 text-cyan-400"></i> PAYLOAD SIM
+                    </div>
+                    <div class="tool-item p-3 border-b border-gray-800 hover:bg-gray-800 cursor-pointer" onclick="activateTool('terminal')">
+                        <i data-feather="terminal" class="inline mr-2 text-cyan-400"></i> TERMINAL
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Panel -->
+            <div class="flex-1 bg-black border-r border-gray-800 flex flex-col">
+                <div id="toolHeader" class="p-2 border-b border-gray-800 text-green-400">SELECT TOOL FROM SIDEBAR</div>
+                <div id="toolContent" class="flex-1 overflow-auto p-4">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+                <div id="statusBar" class="bg-gray-900 border-t border-gray-800 p-1 text-xs text-green-400 flex justify-between">
+                    <span>SIMULATION MODE</span>
+                    <span id="systemTime">--:--:--</span>
+                    <span>READY</span>
+                </div>
+</div>
+
+            <!-- Right Panel -->
+            <div class="w-64 bg-gray-900 flex flex-col">
+                <div class="p-2 border-b border-gray-800 text-center text-green-400">ACTIVITY FEED</div>
+                <div class="flex-1 overflow-y-auto p-2" id="activityFeed">
+                    <div class="text-xs text-gray-400 mb-2">SYSTEM READY</div>
+                </div>
+                <div class="p-2 border-t border-b border-gray-800 text-center text-green-400">ALERTS</div>
+                <div class="flex-1 overflow-y-auto p-2" id="alertFeed">
+                    <div class="text-xs text-gray-400 mb-2">NO ALERTS</div>
+                </div>
+                <div class="p-2 border-t border-gray-800 text-center text-green-400">HEX VIEWER</div>
+                <div class="flex-1 overflow-y-auto p-2 hex-pattern text-xs font-mono text-green-400" id="hexViewer" style="text-shadow: 0 0 5px rgba(0, 255, 157, 0.7);">
+0000: 48 45 58 20 56 49 45 57 45 52 20 53 41 4D 50 4C<br>
+                    0010: 45 20 44 41 54 41 20 2D 20 53 49 4D 55 4C 41 54<br>
+                    0020: 49 4F 4E 20 4F 4E 4C 59 20 2D 20 46 41 4B 45 20<br>
+                    0030: 44 41 54 41 20 47 45 4E 45 52 41 54 45 44 20 4C<br>
+                    0040: 4F 43 41 4C 4C 59 20 2D 20 4E 4F 20 52 45 41 4C<br>
+                    0050: 20 53 59 53 54 45 4D 53 20 41 43 43 45 53 53 45<br>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-4 right-4 bg-gray-900 border border-green-400 text-green-400 px-4 py-2 rounded shadow-lg"></div>
+
+    <script>
+        // Auto start boot sequence
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('loadingScreen').classList.remove('hidden');
+            
+            // Animate progress bar
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 5) + 1;
+                if (progress > 100) progress = 100;
+                document.getElementById('progressBar').style.width = progress + "%";
+                
+                // Add boot lines
+                if (progress % 15 === 0) {
+                    const lines = [
+                        "> LOADING MODULES: UI_RENDER, AUDIO_DRIVER, SIM_ENGINE",
+                        "> VERIFYING SECURITY PROTOCOLS",
+                        "> INITIALIZING NEURAL NETWORK INTERFACE",
+                        "> CONNECTING TO SIMULATION SERVER",
+                        "> ESTABLISHING ENCRYPTED CHANNEL",
+                        "> WELCOME TO CYBERHUD SIMULATION"
+                    ];
+                    const randomLine = lines[Math.floor(Math.random() * lines.length)];
+                    document.getElementById('bootLines').innerHTML += randomLine + "<br>";
+                    document.getElementById('bootLines').scrollTop = document.getElementById('bootLines').scrollHeight;
+                }
+                
+                if (progress === 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        document.getElementById('loadingScreen').classList.add('hidden');
+                        document.getElementById('mainInterface').classList.remove('hidden');
+                        startSessionTimer();
+                    }, 1000);
+                }
+            }, 100);
+        });
+// Session timer
+        function startSessionTimer() {
+            let seconds = 0;
+            setInterval(() => {
+                seconds++;
+                const hours = Math.floor(seconds / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                const secs = seconds % 60;
+                document.getElementById('sessionTimer').textContent = 
+                    `SESSION: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        // Tool system
+        function activateTool(tool) {
+            // Update tool header
+            const toolNames = {
+                'recon': 'RECONNAISSANCE',
+                'portscan': 'PORT SCANNER',
+                'bruteforce': 'BRUTE FORCE SIMULATOR',
+                'networkmap': 'NETWORK MAP',
+                'logviewer': 'LOG VIEWER',
+                'payload': 'PAYLOAD SIMULATOR',
+                'terminal': 'TERMINAL'
+            };
+            document.getElementById('toolHeader').textContent = toolNames[tool];
+            
+            // Clear previous content
+            document.getElementById('toolContent').innerHTML = '';
+            
+            // Highlight active tool
+            document.querySelectorAll('.tool-item').forEach(item => {
+                item.classList.remove('bg-gray-800', 'text-green-400');
+            });
+            document.querySelector(`.tool-item[onclick="activateTool('${tool}')"]`).classList.add('bg-gray-800', 'text-green-400');
+            
+            // Load tool content
+            switch(tool) {
+                case 'recon':
+                    loadReconTool();
+                    break;
+                case 'portscan':
+                    loadPortScanner();
+                    break;
+                case 'hrtool':
+                    loadHRTool();
+                    break;
+                case 'bruteforce':
+                    loadBruteForce();
+                    break;
+case 'networkmap':
+                    loadNetworkMap();
+                    break;
+                case 'logviewer':
+                    loadLogViewer();
+                    break;
+                case 'payload':
+                    loadPayloadSim();
+                    break;
+                case 'terminal':
+                    loadTerminal();
+                    break;
+            }
+            
+            // Add to activity feed
+            addActivityLog(`TOOL ACTIVATED: ${toolNames[tool]}`);
+        }
+
+        function loadReconTool() {
+            const content = `
+                <div class="mb-4">
+                    <div class="text-green-400 mb-2">TARGET IDENTIFIER:</div>
+                    <input type="text" id="reconTarget" class="bg-gray-900 border border-gray-700 text-green-400 px-2 py-1 w-full mb-2" placeholder="ENTER TARGET (e.g., FAKE-TARGET-01)">
+                    <button onclick="runRecon()" class="bg-gray-800 border border-cyan-400 text-cyan-400 px-4 py-1 hover:bg-gray-700">EXECUTE</button>
+                </div>
+                <div id="reconResults" class="border border-gray-700 p-2 h-64 overflow-auto bg-black bg-opacity-50 hidden">
+                    <div class="text-xs text-green-400">RECON RESULTS WILL APPEAR HERE</div>
+                </div>
+            `;
+            document.getElementById('toolContent').innerHTML = content;
+        }
+
+        function runRecon() {
+            const target = document.getElementById('reconTarget').value || 'FAKE-TARGET-' + Math.floor(Math.random() * 100);
+            document.getElementById('reconResults').classList.remove('hidden');
+            document.getElementById('reconResults').innerHTML = '<div class="text-xs text-gray-400">INITIALIZING RECONNAISSANCE...</div>';
+            
+            setTimeout(() => {
+                document.getElementById('reconResults').innerHTML += `<div class="text-xs text-green-400">> TARGET ACQUIRED: ${target}</div>`;
+                
+                setTimeout(() => {
+                    document.getElementById('reconResults').innerHTML += '<div class="text-xs text-green-400">> SCANNING PUBLIC RECORDS...</div>';
+                    
+                    setTimeout(() => {
+                        const fakeData = {
+                            id: target,
+                            ip: `192.0.2.${Math.floor(Math.random() * 254) + 1}`,
+                            lastSeen: new Date().toISOString(),
+                            tags: ['SIMULATED', 'FAKE_DATA', 'NO_REAL_SYSTEM']
+                        };
+                        
+                        document.getElementById('reconResults').innerHTML += `
+                            <div class="text-xs text-green-400 mt-4">RECONNAISSANCE COMPLETE</div>
+                            <div class="text-xs text-gray-400 mt-2">
+                                ID: ${fakeData.id}<br>
+                                IP: ${fakeData.ip}<br>
+                                LAST SEEN: ${fakeData.lastSeen}<br>
+                                TAGS: ${fakeData.tags.join(', ')}
+                            </div>
+                            <div class="mt-4 p-2 bg-gray-900 border border-green-400 text-green-400 text-center">
+                                ACCESS GRANTED - SIMULATION MODE
+                            </div>
+                        `;
+                        
+                        document.getElementById('reconResults').scrollTop = document.getElementById('reconResults').scrollHeight;
+                        addActivityLog(`RECON COMPLETED: ${target}`);
+                        showToast('RECONNAISSANCE COMPLETE');
+                        
+                        // Update hex viewer with fake data
+                        updateHexViewer();
+                    }, 1500);
+                }, 1200);
+            }, 800);
+        }
+
+        function loadPortScanner() {
+            const content = `
+                <div class="mb-4">
+                    <div class="text-green-400 mb-2">TARGET IP:</div>
+                    <input type="text" id="portscanTarget" class="bg-gray-900 border border-gray-700 text-green-400 px-2 py-1 w-full mb-2" placeholder="ENTER IP (e.g., 192.0.2.1)">
+                    <button onclick="runPortScan()" class="bg-gray-800 border border-cyan-400 text-cyan-400 px-4 py-1 hover:bg-gray-700">SCAN</button>
+                </div>
+                <div id="portscanResults" class="border border-gray-700 p-2 h-64 overflow-auto bg-black bg-opacity-50 hidden">
+                    <div class="text-xs text-green-400">PORT SCAN RESULTS WILL APPEAR HERE</div>
+                </div>
+            `;
+            document.getElementById('toolContent').innerHTML = content;
+        }
+
+        function runPortScan() {
+            const target = document.getElementById('portscanTarget').value || `192.0.2.${Math.floor(Math.random() * 254) + 1}`;
+            document.getElementById('portscanResults').classList.remove('hidden');
+            document.getElementById('portscanResults').innerHTML = '<div class="text-xs text-gray-400">INITIALIZING PORT SCAN...</div>';
+            
+            setTimeout(() => {
+                document.getElementById('portscanResults').innerHTML += `<div class="text-xs text-green-400">> TARGET: ${target}</div>`;
+                
+                setTimeout(() => {
+                    document.getElementById('portscanResults').innerHTML += '<div class="text-xs text-green-400">> SCANNING PORTS 1-1024...</div>';
+                    
+                    setTimeout(() => {
+                        // Generate random open ports
+                        const openPorts = [];
+                        const commonPorts = [21, 22, 80, 443, 3389, 8080];
+                        for (let i = 0; i < Math.floor(Math.random() * 5) + 2; i++) {
+                            openPorts.push(commonPorts[Math.floor(Math.random() * commonPorts.length)]);
+                        }
+                        // Remove duplicates
+                        const uniquePorts = [...new Set(openPorts)];
+                        
+                        document.getElementById('portscanResults').innerHTML += `
+                            <div class="text-xs text-green-400 mt-4">PORT SCAN COMPLETE</div>
+                            <div class="text-xs text-gray-400 mt-2">
+                                OPEN PORTS:<br>
+                                ${uniquePorts.map(port => `PORT ${port} - ${getServiceName(port)}`).join('<br>')}
+                            </div>
+                            <div class="mt-4 p-2 bg-gray-900 border border-green-400 text-green-400 text-center">
+                                ACCESS GRANTED - SIMULATION MODE
+                            </div>
+                        `;
+                        
+                        document.getElementById('portscanResults').scrollTop = document.getElementById('portscanResults').scrollHeight;
+                        addActivityLog(`PORT SCAN COMPLETED: ${target}`);
+                        showToast('PORT SCAN COMPLETE');
+                        
+                        // Update hex viewer with fake data
+                        updateHexViewer();
+                    }, 2000);
+                }, 1200);
+            }, 800);
+        }
+
+        function getServiceName(port) {
+            const services = {
+                21: 'FTP',
+                22: 'SSH',
+                80: 'HTTP',
+                443: 'HTTPS',
+                3389: 'RDP',
+                8080: 'HTTP-ALT'
+            };
+            return services[port] || 'UNKNOWN';
+        }
+
+        function loadBruteForce() {
+            const content = `
+                <div class="mb-4">
+                    <div class="text-green-400 mb-2">TARGET SYSTEM:</div>
+                    <input type="text" id="bruteforceTarget" class="bg-gray-900 border border-gray-700 text-green-400 px-2 py-1 w-full mb-2" placeholder="ENTER TARGET (e.g., FAKE-LOGIN)">
+                    <button onclick="runBruteForce()" class="bg-gray-800 border border-cyan-400 text-cyan-400 px-4 py-1 hover:bg-gray-700">EXECUTE</button>
+                </div>
+                <div id="bruteforceResults" class="border border-gray-700 p-2 h-64 overflow-auto bg-black bg-opacity-50 hidden">
+                    <div class="text-xs text-green-400">BRUTE FORCE RESULTS WILL APPEAR HERE</div>
+                </div>
+            `;
+            document.getElementById('toolContent').innerHTML = content;
+        }
+
+        function runBruteForce() {
+            const target = document.getElementById('bruteforceTarget').value || 'FAKE-LOGIN-' + Math.floor(Math.random() * 100);
+            document.getElementById('bruteforceResults').classList.remove('hidden');
+            document.getElementById('bruteforceResults').innerHTML = '<div class="text-xs text-gray-400">INITIALIZING BRUTE FORCE ATTACK...</div>';
+            
+            setTimeout(() => {
+                document.getElementById('bruteforceResults').innerHTML += `<div class="text-xs text-green-400">> TARGET: ${target}</div>`;
+                
+                setTimeout(() => {
+                    document.getElementById('bruteforceResults').innerHTML += '<div class="text-xs text-green-400">> LOADING WORDLIST...</div>';
+                    
+                    setTimeout(() => {
+                        document.getElementById('bruteforceResults').innerHTML += '<div class="text-xs text-green-400">> ATTEMPTING CREDENTIALS...</div>';
+                        
+                        // Simulate progress
+                        let attempts = 0;
+                        const maxAttempts = Math.floor(Math.random() * 10) + 5;
+                        const interval = setInterval(() => {
+                            attempts++;
+                            document.getElementById('bruteforceResults').innerHTML += `<div class="text-xs text-gray-400">> ATTEMPT ${attempts}: FAILED</div>`;
+                            document.getElementById('bruteforceResults').scrollTop = document.getElementById('bruteforceResults').scrollHeight;
+                            
+                            if (attempts === maxAttempts - 1) {
+                                document.getElementById('bruteforceResults').innerHTML += `<div class="text-xs text-green-400">> CREDENTIALS FOUND: admin / password123</div>`;
+                            }
+                            
+                            if (attempts >= maxAttempts) {
+                                clearInterval(interval);
+                                document.getElementById('bruteforceResults').innerHTML += `
+                                    <div class="text-xs text-green-400 mt-4">BRUTE FORCE COMPLETE</div>
+                                    <div class="text-xs text-gray-400 mt-2">
+                                        CREDENTIALS COMPROMISED:<br>
+                                        USERNAME: admin<br>
+                                        PASSWORD: password123<br>
+                                        <span class="text-red-400">NOTE: THIS IS SIMULATED DATA</span>
+                                    </div>
+                                    <div class="mt-4 p-2 bg-gray-900 border border-green-400 text-green-400 text-center">
+                                        ACCESS GRANTED - SIMULATION MODE
+                                    </div>
+                                `;
+                                
+                                document.getElementById('bruteforceResults').scrollTop = document.getElementById('bruteforceResults').scrollHeight;
+                                addActivityLog(`BRUTE FORCE COMPLETED: ${target}`);
+                                showToast('BRUTE FORCE COMPLETE');
+                                
+                                // Update hex viewer with fake data
+                                updateHexViewer();
+                            }
+                        }, 300);
+                    }, 1200);
+                }, 800);
+            }, 500);
+        }
+
+        function loadNetworkMap() {
+            const content = `
+                <div class="text-green-400 mb-2">NETWORK TOPOLOGY:</div>
+                <div class="border border-gray-700 p-4 h-64 overflow-auto bg-black bg-opacity-50 flex items-center justify-center">
+                    <div class="text-center">
+                        <div class="text-green-400">CENTRAL HUB</div>
+                        <div class="my-2">⬇</div>
+                        <div class="flex justify-center space-x-8">
+                            <div>
+                                <div class="text-cyan-400">NODE 1</div>
+                                <div class="text-xs text-gray-400">192.0.2.1</div>
+                            </div>
+                            <div>
+                                <div class="text-cyan-400">NODE 2</div>
+                                <div class="text-xs text-gray-400">192.0.2.2</div>
+                            </div>
+                            <div>
+                                <div class="text-cyan-400">NODE 3</div>
+                                <div class="text-xs text-gray-400">192.0.2.3</div>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-xs text-gray-400">SIMULATED NETWORK - NO REAL CONNECTIONS</div>
+                    </div>
+                </div>
+                <button onclick="scanNetwork()" class="mt-4 bg-gray-800 border border-cyan-400 text-cyan-400 px-4 py-1 hover:bg-gray-700">SCAN NETWORK</button>
+                <div id="networkScanResults" class="mt-4 text-xs text-gray-400 hidden"></div>
+            `;
+            document.getElementById('toolContent').innerHTML = content;
+        }
+
+        function scanNetwork() {
+            document.getElementById('networkScanResults').classList.remove('hidden');
+            document.getElementById('networkScanResults').innerHTML = 'SCANNING NETWORK...';
+            
+            setTimeout(() => {
+                document.getElementById('networkScanResults').innerHTML = `
+                    NETWORK SCAN COMPLETE<br>
+                    ACTIVE NODES: 3<br>
+                    SERVICES DETECTED: HTTP, SSH, RDP<br>
+                    <span class="text-green-400">ACCESS GRANTED - SIMULATION MODE</span>
+                `;
+                
+                addActivityLog('NETWORK SCAN COMPLETED');
+                showToast('NETWORK SCAN COMPLETE');
+                
+                // Update hex viewer with fake data
+                updateHexViewer();
+            }, 2000);
+        }
+
+        function loadLogViewer() {
+            const fakeLogs = [];
+            const logTypes = ['AUTH', 'SYSTEM', 'NETWORK', 'SECURITY'];
+            const logStatuses = ['SUCCESS', 'WARNING', 'ERROR', 'INFO'];
+            
+            for (let i = 0; i < 20; i++) {
+                fakeLogs.push({
+                    id: `FAKE-LOG-${Math.floor(Math.random() * 1000)}`,
+                    timestamp: new Date(Date.now() - Math.floor(Math.random() * 86400000)).toISOString(),
+                    type: logTypes[Math.floor(Math.random() * logTypes.length)],
+                    status: logStatuses[Math.floor(Math.random() * logStatuses.length)],
+                    message: `Simulated log entry ${i + 1} - ${['user login', 'system update', 'network event', 'security check'][Math.floor(Math.random() * 4)]}`
+                });
+            }
+            
+            const logElements = fakeLogs.map(log => `
+                <div class="border-b border-gray-800 py-2 text-xs">
+                    <div class="flex justify-between">
+                        <span class="${log.status === 'ERROR' ? 'text-red-400' : log.status === 'WARNING' ? 'text-yellow-400' : 'text-green-400'}">[${log.timestamp}]</span>
+                        <span class="text-cyan-400">${log.type}</span>
+                    </div>
+                    <div class="mt-1 text-gray-400">${log.message}</div>
+                </div>
+            `).join('');
+            
+            const content = `
+                <div class="text-green-400 mb-2">SYSTEM LOGS:</div>
+                <div class="border border-gray-700 p-2 h-64 overflow-auto bg-black bg-opacity-50">
+                    ${logElements}
+                </div>
+                <button onclick="refreshLogs()" class="mt-4 bg-gray-800 border border-cyan-400 text-cyan-400 px-4 py-1 hover:bg-gray-700">REFRESH LOGS</button>
+            `;
+            document.getElementById('toolContent').innerHTML = content;
+        }
+
+        function refreshLogs() {
+            loadLogViewer();
+            showToast('LOGS REFRESHED');
+            addActivityLog('LOG VIEWER REFRESHED');
+        }
+
+        function loadPayloadSim() {
+            const content = `
+                <div class="mb-4">
+                    <div class="text-green-400 mb-2">PAYLOAD TYPE:</div>
+                    <select id="payloadType" class="bg-gray-900 border border-gray-700 text-green-400 px-2 py-1 w-full mb-2">
+                        <option value="keylogger">KEYLOGGER SIM</option>
+                        <option value="ransomware">RANSOMWARE SIM</option>
+                        <option value="backdoor">BACKDOOR SIM</option>
+                    </select>
+                    <div class="text-green-400 mb-2">TARGET:</div>
+                    <input type="text" id="payloadTarget" class="bg-gray-900 border border-gray-700 text-green-400 px-2 py-1 w-full mb-2" placeholder="ENTER TARGET">
+                    <button onclick="runPayload()" class="bg-gray-800 border border-cyan-400 text-cyan-400 px-4 py-1 hover:bg-gray-700">DEPLOY</button>
+                </div>
+                <div id="payloadResults" class="border border-gray-700 p-2 h-64 overflow-auto bg-black bg-opacity-50 hidden">
+                    <div class="text-xs text-green-400">PAYLOAD RESULTS WILL APPEAR HERE</div>
+                </div>
+            `;
+            document.getElementById('toolContent').innerHTML = content;
+        }
+
+        function runPayload() {
+            const type = document.getElementById('payloadType').value;
+            const target = document.getElementById('payloadTarget').value || 'FAKE-TARGET-' + Math.floor(Math.random() * 100);
+            document.getElementById('payloadResults').classList.remove('hidden');
+            document.getElementById('payloadResults').innerHTML = '<div class="text-xs text-gray-400">INITIALIZING PAYLOAD...</div>';
+            
+            setTimeout(() => {
+                document.getElementById('payloadResults').innerHTML += `<div class="text-xs text-green-400">> TARGET: ${target}</div>`;
+                
+                setTimeout(() => {
+                    document.getElementById('payloadResults').innerHTML += `<div class="text-xs text-green-400">> DEPLOYING ${type.toUpperCase()}...</div>`;
+                    
+                    setTimeout(() => {
+                        let resultMessage = '';
+                        if (type === 'keylogger') {
+                            resultMessage = 'KEYLOGGER DEPLOYED - SIMULATED KEYSTROKES CAPTURED';
+                        } else if (type === 'ransomware') {
+                            resultMessage = 'RANSOMWARE DEPLOYED - SIMULATED FILES ENCRYPTED';
+                        } else {
+                            resultMessage = 'BACKDOOR DEPLOYED - SIMULATED ACCESS ESTABLISHED';
+                        }
+                        
+                        document.getElementById('payloadResults').innerHTML += `
+                            <div class="text-xs text-green-400 mt-4">PAYLOAD DEPLOYMENT COMPLETE</div>
+                            <div class="text-xs text-gray-400 mt-2">
+                                ${resultMessage}<br>
+                                TARGET: ${target}<br>
+                                STATUS: ACTIVE<br>
+                                <span class="text-red-400">NOTE: THIS IS SIMULATED ACTIVITY</span>
+                            </div>
+                            <div class="mt-4 p-2 bg-gray-900 border border-green-400 text-green-400 text-center">
+                                ACCESS GRANTED - SIMULATION MODE
+                            </div>
+                        `;
+                        
+                        document.getElementById('payloadResults').scrollTop = document.getElementById('payloadResults').scrollHeight;
+                        addActivityLog(`PAYLOAD DEPLOYED: ${type} to ${target}`);
+                        showToast('PAYLOAD DEPLOYMENT COMPLETE');
+                        
+                        // Update hex viewer with fake data
+                        updateHexViewer();
+                    }, 2000);
+                }, 1200);
+            }, 800);
+        }
+        function loadHRTool() {
+            const content = `
+                <div class="mb-4">
+                    <div class="text-green-400 mb-2">HR TOOL V3.1 (ADVANCED MODE)</div>
+                    <div class="text-xs text-gray-400 mb-4">MULTI-LAYER CODE ANALYSIS & OPTIMIZATION</div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <button onclick="runHRSystemDiagnostic()" class="bg-gray-800 border border-blue-400 text-blue-400 px-4 py-2 hover:bg-gray-700">SYSTEM DIAGNOSTIC</button>
+                        <button onclick="runHRCodeAnalysis()" class="bg-gray-800 border border-purple-400 text-purple-400 px-4 py-2 hover:bg-gray-700">CODE ANALYSIS</button>
+                        <button onclick="runHRMemoryOptimization()" class="bg-gray-800 border border-green-400 text-green-400 px-4 py-2 hover:bg-gray-700">MEMORY OPTIMIZATION</button>
+                        <button onclick="runHRPerformanceBenchmark()" class="bg-gray-800 border border-yellow-400 text-yellow-400 px-4 py-2 hover:bg-gray-700">PERFORMANCE BENCHMARK</button>
+                    </div>
+                    <div id="hrProgress" class="h-1 bg-gray-800 mb-2 hidden">
+                        <div id="hrProgressBar" class="h-full bg-gradient-to-r from-blue-400 to-purple-400" style="width:0%"></div>
+                    </div>
+                    <div id="hrResults" class="border border-gray-700 p-2 h-64 overflow-auto bg-black bg-opacity-50 hidden">
+                        <div class="text-xs text-green-400">HR TOOL RESULTS WILL APPEAR HERE</div>
+                    </div>
+                    <div id="hrCodeEditor" class="mt-4 hidden">
+                        <div class="flex mb-2">
+                            <select id="hrLanguageSelect" class="bg-gray-900 border border-gray-700 text-green-400 px-2 py-1 mr-2">
+                                <option value="python">Python</option>
+                                <option value="javascript">JavaScript</option>
+                                <option value="cpp">C++</option>
+                                <option value="java">Java</option>
+                                <option value="rust">Rust</option>
+                            </select>
+                            <button onclick="toggleHRCodeTheme()" class="bg-gray-800 border border-gray-700 text-gray-400 px-2 py-1 hover:bg-gray-700">TOGGLE THEME</button>
+                        </div>
+                        <textarea id="hrCodeInput" class="w-full h-48 bg-gray-900 border border-gray-700 text-green-400 p-2 font-mono text-xs" placeholder="Enter complex code here..."></textarea>
+                        <div class="flex justify-between mt-2">
+                            <button onclick="analyzeHRCode()" class="bg-gray-800 border border-blue-400 text-blue-400 px-4 py-1 hover:bg-gray-700">ANALYZE</button>
+                            <button onclick="optimizeHRCode()" class="bg-gray-800 border border-green-400 text-green-400 px-4 py-1 hover:bg-gray-700">OPTIMIZE</button>
+                            <button onclick="executeHRCode()" class="bg-gray-800 border border-purple-400 text-purple-400 px-4 py-1 hover:bg-gray-700">EXECUTE</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('toolContent').innerHTML = content;
+        }
+function runHRScan() {
+            document.getElementById('hrProgress').classList.remove('hidden');
+            document.getElementById('hrResults').classList.remove('hidden');
+            document.getElementById('hrResults').innerHTML = '<div class="text-xs text-gray-400">INITIALIZING DEEP SCAN...</div>';
+            
+            let progress = 0;
+            const stages = [
+                "LOADING MODULES",
+                "ANALYZING SYSTEM",
+                "PROFILING PERFORMANCE",
+                "OPTIMIZING ALGORITHMS",
+                "FINALIZING RESULTS"
+            ];
+            
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 3) + 1;
+                if (progress > 100) progress = 100;
+                document.getElementById('hrProgressBar').style.width = progress + "%";
+                
+                if (progress % 20 === 0) {
+                    const stage = stages[progress/20 - 1];
+                    document.getElementById('hrResults').innerHTML += `<div class="text-xs text-cyan-400">> STAGE ${progress/20}: ${stage}</div>`;
+                    document.getElementById('hrResults').scrollTop = document.getElementById('hrResults').scrollHeight;
+                }
+                
+                if (progress === 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        document.getElementById('hrResults').innerHTML += `
+                            <div class="text-xs text-green-400 mt-4">DEEP SCAN COMPLETE</div>
+                            <div class="text-xs text-gray-400 mt-2">
+                                SYSTEM ANALYSIS REPORT:<br>
+                                - PROCESSED 1,024 SIMULATED FILES<br>
+                                - FOUND 87 POTENTIAL ISSUES<br>
+                                - OPTIMIZED 42 ALGORITHMS<br>
+                                - EXECUTION TIME: 3.7s (SIMULATED)<br>
+                            </div>
+                            <div class="mt-4">
+                                <div class="text-xs text-purple-400">ADVANCED MODE UNLOCKED</div>
+                                <button onclick="showHRCodeEditor()" class="mt-2 bg-gray-800 border border-purple-400 text-purple-400 px-4 py-1 hover:bg-gray-700">ENTER CODE MODE</button>
+                            </div>
+                        `;
+                        document.getElementById('hrResults').scrollTop = document.getElementById('hrResults').scrollHeight;
+                        addActivityLog('DEEP SCAN COMPLETED');
+                        showToast('HR TOOL: DEEP SCAN COMPLETE');
+                    }, 500);
+                }
+            }, 100);
+        }
+
+        function showHRCodeEditor() {
+            document.getElementById('hrCodeEditor').classList.remove('hidden');
+        }
+
+        function executeHRCode() {
+            const code = document.getElementById('hrCodeInput').value;
+            if (!code) return;
+            
+            document.getElementById('hrResults').innerHTML += `
+                <div class="text-xs text-purple-400 mt-4">EXECUTING CODE...</div>
+                <div class="text-xs text-gray-400 font-mono mt-1">${code.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+            `;
+            
+            setTimeout(() => {
+                document.getElementById('hrResults').innerHTML += `
+                    <div class="text-xs text-green-400 mt-2">CODE EXECUTION COMPLETE</div>
+                    <div class="text-xs text-gray-400 mt-1">
+                        OUTPUT: SIMULATED CODE RUN SUCCESSFUL<br>
+                        EXECUTION TIME: ${(Math.random()*5 + 1).toFixed(2)}s<br>
+                        MEMORY USAGE: ${Math.floor(Math.random()*1024 + 256)}MB
+                    </div>
+                `;
+                document.getElementById('hrResults').scrollTop = document.getElementById('hrResults').scrollHeight;
+                addActivityLog('HR TOOL: CODE EXECUTED');
+                showToast('HR TOOL: CODE EXECUTION COMPLETE');
+            }, 2000);
+        }
+        function runHRSystemDiagnostic() {
+            document.getElementById('hrProgress').classList.remove('hidden');
+            document.getElementById('hrResults').classList.remove('hidden');
+            document.getElementById('hrResults').innerHTML = '<div class="text-xs text-gray-400">INITIALIZING SYSTEM DIAGNOSTIC...</div>';
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 2) + 1;
+                if (progress > 100) progress = 100;
+                document.getElementById('hrProgressBar').style.width = progress + "%";
+                
+                if (progress % 5 === 0) {
+                    const modules = [
+                        "CHECKING MEMORY ALLOCATION",
+                        "ANALYZING CPU UTILIZATION",
+                        "SCANNING NETWORK INTERFACES",
+                        "VERIFYING STORAGE INTEGRITY",
+                        "OPTIMIZING THREAD POOL",
+                        "VALIDATING SECURITY PROTOCOLS"
+                    ];
+                    const randomModule = modules[Math.floor(Math.random() * modules.length)];
+                    document.getElementById('hrResults').innerHTML += `<div class="text-xs text-blue-400">> ${randomModule} (${progress}%)</div>`;
+                    document.getElementById('hrResults').scrollTop = document.getElementById('hrResults').scrollHeight;
+                }
+                
+                if (progress === 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        document.getElementById('hrResults').innerHTML += `
+                            <div class="text-xs text-green-400 mt-4">SYSTEM DIAGNOSTIC COMPLETE</div>
+                            <div class="text-xs text-gray-400 mt-2">
+                                DIAGNOSTIC REPORT:<br>
+                                - CPU: ${Math.floor(Math.random()*80)+20}% UTILIZATION<br>
+                                - MEMORY: ${Math.floor(Math.random()*2048)+512}MB USED<br>
+                                - STORAGE: ${(Math.random()*50+50).toFixed(1)}% CAPACITY<br>
+                                - NETWORK: ${Math.floor(Math.random()*500)+100}MB/s THROUGHPUT<br>
+                                - SECURITY: 100% VERIFIED (SIMULATED)
+                            </div>
+                            <div class="mt-4 p-2 bg-gray-900 border border-green-400 text-green-400 text-center">
+                                SYSTEM OPERATIONAL - SIMULATION MODE
+                            </div>
+                        `;
+                        document.getElementById('hrResults').scrollTop = document.getElementById('hrResults').scrollHeight;
+                        addActivityLog('HR TOOL: SYSTEM DIAGNOSTIC COMPLETED');
+                        showToast('SYSTEM DIAGNOSTIC COMPLETE');
+                    }, 1000);
+                }
+            }, 200);
+        }
+
+        function runHRCodeAnalysis() {
+            document.getElementById('hrProgress').classList.remove('hidden');
+            document.getElementById('hrResults').classList.remove('hidden');
+            document.getElementById('hrResults').innerHTML = '<div class="text-xs text-gray-400">INITIALIZING CODE ANALYSIS...</div>';
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 3) + 1;
+                if (progress > 100) progress = 100;
+                document.getElementById('hrProgressBar').style.width = progress + "%";
+                document.getElementById('hrProgressBar').classList.replace('bg-gradient-to-r', 'bg-gradient-to-r');
+                document.getElementById('hrProgressBar').classList.replace('from-blue-400', 'from-purple-400');
+                document.getElementById('hrProgressBar').classList.replace('to-purple-400', 'to-pink-400');
+                
+                if (progress % 10 === 0) {
+                    const analyses = [
+                        "PARSING SYNTAX TREE",
+                        "ANALYZING CONTROL FLOW",
+                        "DETECTING CODE SMELLS",
+                        "IDENTIFYING PATTERNS",
+                        "CALCULATING COMPLEXITY",
+                        "GENERATING METRICS"
+                    ];
+                    const randomAnalysis = analyses[Math.floor(Math.random() * analyses.length)];
+                    document.getElementById('hrResults').innerHTML += `<div class="text-xs text-purple-400">> ${randomAnalysis} (${progress}%)</div>`;
+                    document.getElementById('hrResults').scrollTop = document.getElementById('hrResults').scrollHeight;
+                }
+                
+                if (progress === 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        document.getElementById('hrResults').innerHTML += `
+                            <div class="text-xs text-green-400 mt-4">CODE ANALYSIS COMPLETE</div>
+                            <div class="text-xs text-gray-400 mt-2">
+                                ANALYSIS REPORT:<br>
+                                - LINES: ${Math.floor(Math.random()*5000)+1000}<br>
+                                - COMPLEXITY: ${(Math.random()*5+2).toFixed(1)}/10<br>
+                                - CODE SMELLS: ${Math.floor(Math.random()*20)+5}<br>
+                                - DUPLICATION: ${Math.floor(Math.random()*15)+5}%<br>
+                                - COVERAGE: ${Math.floor(Math.random()*80)+20}%
+                            </div>
+                            <div class="mt-4">
+                                <button onclick="showHRCodeEditor()" class="bg-gray-800 border border-purple-400 text-purple-400 px-4 py-1 hover:bg-gray-700">VIEW DETAILED ANALYSIS</button>
+                            </div>
+                        `;
+                        document.getElementById('hrResults').scrollTop = document.getElementById('hrResults').scrollHeight;
+                        addActivityLog('HR TOOL: CODE ANALYSIS COMPLETED');
+                        showToast('CODE ANALYSIS COMPLETE');
+                    }, 1500);
+                }
+            }, 300);
+        }
+
+        function runHRMemoryOptimization() {
+            document.getElementById('hrProgress').classList.remove('hidden');
+            document.getElementById('hrResults').classList.remove('hidden');
+            document.getElementById('hrResults').innerHTML = '<div class="text-xs text-gray-400">INITIALIZING MEMORY OPTIMIZATION...</div>';
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 4) + 1;
+                if (progress > 100) progress = 100;
+                document.getElementById('hrProgressBar').style.width = progress + "%";
+                document.getElementById('hrProgressBar').classList.replace('bg-gradient-to-r', 'bg-gradient-to-r');
+                document.getElementById('hrProgressBar').classList.replace('from-purple-400', 'from-green-400');
+                document.getElementById('hrProgressBar').classList.replace('to-pink-400', 'to-teal-400');
+                
+                if (progress % 7 === 0) {
+                    const optimizations = [
+                        "ANALYZING HEAP ALLOCATION",
+                        "IDENTIFYING MEMORY LEAKS",
+                        "OPTIMIZING GARBAGE COLLECTION",
+                        "COMPACTING MEMORY PAGES",
+                        "DEFRAGMENTING VIRTUAL MEMORY",
+                        "BALANCING CACHE USAGE"
+                    ];
+                    const randomOptimization = optimizations[Math.floor(Math.random() * optimizations.length)];
+                    document.getElementById('hrResults').innerHTML += `<div class="text-xs text-green-400">> ${randomOptimization} (${progress}%)</div>`;
+                    document.getElementById('hrResults').scrollTop = document.getElementById('hrResults').scrollHeight;
+                }
+                
+                if (progress === 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        document.getElementById('hrResults').innerHTML += `
+                            <div class="text-xs text-green-400 mt-4">MEMORY OPTIMIZATION COMPLETE</div>
+                            <div class="text-xs text-gray-400 mt-2">
+                                OPTIMIZATION REPORT:<br>
+                                - MEMORY USAGE REDUCED BY ${Math.floor(Math.random()*40)+10}%<br>
+                                - HEAP FRAGMENTATION DECREASED BY ${Math.floor(Math.random()*60)+20}%<br>
+                                - GARBAGE COLLECTION PAUSES REDUCED BY ${Math.floor(Math.random()*70)+15}%<br>
+                                - CACHE HIT RATE IMPROVED BY ${Math.floor(Math.random()*30)+10}%
+                            </div>
+                            <div class="mt-4 p-2 bg-gray-900 border border-green-400 text-green-400 text-center">
+                                MEMORY OPTIMIZED - SIMULATION MODE
+                            </div>
+                        `;
+                        document.getElementById('hrResults').scrollTop = document.getElementById('hrResults').scrollHeight;
+                        addActivityLog('HR TOOL: MEMORY OPTIMIZATION COMPLETED');
+                        showToast('MEMORY OPTIMIZATION COMPLETE');
+                    }, 2000);
+                }
+            }, 400);
+        }
+
+        function runHRPerformanceBenchmark() {
+            document.getElementById('hrProgress').classList.remove('hidden');
+            document.getElementById('hrResults').classList.remove('hidden');
+            document.getElementById('hrResults').innerHTML = '<div class="text-xs text-gray-400">INITIALIZING PERFORMANCE BENCHMARK...</div>';
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 2) + 1;
+                if (progress > 100) progress = 100;
+                document.getElementById('hrProgressBar').style.width = progress + "%";
+                document.getElementById('hrProgressBar').classList.replace('bg-gradient-to-r', 'bg-gradient-to-r');
+                document.getElementById('hrProgressBar').classList.replace('from-green-400', 'from-yellow-400');
+                document.getElementById('hrProgressBar').classList.replace('to-teal-400', 'to-amber-400');
+                
+                if (progress % 8 === 0) {
+                    const benchmarks = [
+                        "EXECUTING CPU STRESS TEST",
+                        "RUNNING MEMORY THROUGHPUT TEST",
+                        "PERFORMING DISK I/O BENCHMARK",
+                        "MEASURING NETWORK LATENCY",
+                        "ANALYZING THREAD PERFORMANCE",
+                        "CALCULATING OVERALL SCORE"
+                    ];
+                    const randomBenchmark = benchmarks[Math.floor(Math.random() * benchmarks.length)];
+                    document.getElementById('hrResults').innerHTML += `<div class="text-xs text-yellow-400">> ${randomBenchmark} (${progress}%)</div>`;
+                    document.getElementById('hrResults').scrollTop = document.getElementById('hrResults').scrollHeight;
+                }
+                
+                if (progress === 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        const cpuScore = Math.floor(Math.random()*5000)+2000;
+                        const memScore = Math.floor(Math.random()*4000)+1500;
+                        const diskScore = Math.floor(Math.random()*3000)+1000;
+                        const netScore = Math.floor(Math.random()*2000)+500;
+                        const totalScore = cpuScore + memScore + diskScore + netScore;
+                        
+                        document.getElementById('hrResults').innerHTML += `
+                            <div class="text-xs text-green-400 mt-4">PERFORMANCE BENCHMARK COMPLETE</div>
+                            <div class="text-xs text-gray-400 mt-2">
+                                BENCHMARK RESULTS:<br>
+                                - CPU: ${cpuScore} OPERATIONS/SEC<br>
+                                - MEMORY: ${memScore} MB/S<br>
+                                - DISK: ${diskScore} IOPS<br>
+                                - NETWORK: ${netScore} MB/S<br>
+                                - TOTAL SCORE: ${totalScore} (SIMULATED)
+                            </div>
+                            <div class="mt-4">
+                                <div class="text-xs text-yellow-400">PERFORMANCE RATING: ${Math.floor(Math.random()*5)+6}/10</div>
+                                <progress value="${Math.floor(Math.random()*80)+20}" max="100" class="w-full h-2 bg-gray-800"></progress>
+                            </div>
+                        `;
+                        document.getElementById('hrResults').scrollTop = document.getElementById('hrResults').scrollHeight;
+                        addActivityLog('HR TOOL: PERFORMANCE BENCHMARK COMPLETED');
+                        showToast('PERFORMANCE BENCHMARK COMPLETE');
+                    }, 2500);
+                }
+            }, 350);
+        }
+
+        function analyzeHRCode() {
+            const code = document.getElementById('hrCodeInput').value;
+            if (!code) return;
+            
+            document.getElementById('hrResults').classList.remove('hidden');
+            document.getElementById('hrResults').innerHTML += `
+                <div class="text-xs text-blue-400 mt-4">ANALYZING CODE...</div>
+                <div class="text-xs text-gray-400 font-mono mt-1">${code.substring(0, 100)}...</div>
+            `;
+            
+            setTimeout(() => {
+                document.getElementById('hrResults').innerHTML += `
+                    <div class="text-xs text-green-400 mt-2">CODE ANALYSIS COMPLETE</div>
+                    <div class="text-xs text-gray-400 mt-1">
+                        - ${Math.floor(Math.random()*10)+5} POTENTIAL ISSUES FOUND<br>
+                        - ${Math.floor(Math.random()*15)+5} OPTIMIZATION OPPORTUNITIES<br>
+                        - COMPLEXITY SCORE: ${(Math.random()*8+2).toFixed(1)}/10
+                    </div>
+                `;
+                document.getElementById('hrResults').scrollTop = document.getElementById('hrResults').scrollHeight;
+                addActivityLog('HR TOOL: CODE ANALYSIS EXECUTED');
+                showToast('CODE ANALYSIS COMPLETE');
+            }, 3000);
+        }
+
+        function optimizeHRCode() {
+            const code = document.getElementById('hrCodeInput').value;
+            if (!code) return;
+            
+            document.getElementById('hrResults').classList.remove('hidden');
+            document.getElementById('hrResults').innerHTML += `
+                <div class="text-xs text-green-400 mt-4">OPTIMIZING CODE...</div>
+                <div class="text-xs text-gray-400 font-mono mt-1">${code.substring(0, 100)}...</div>
+            `;
+            
+            setTimeout(() => {
+                document.getElementById('hrResults').innerHTML += `
+                    <div class="text-xs text-green-400 mt-2">CODE OPTIMIZATION COMPLETE</div>
+                    <div class="text-xs text-gray-400 mt-1">
+                        - PERFORMANCE IMPROVEMENT: ~${Math.floor(Math.random()*40)+10}%<br>
+                        - MEMORY USAGE REDUCED: ~${Math.floor(Math.random()*30)+5}%<br>
+                        - CODE SIZE REDUCED: ~${Math.floor(Math.random()*20)+5}%
+                    </div>
+                `;
+                document.getElementById('hrResults').scrollTop = document.getElementById('hrResults').scrollHeight;
+                addActivityLog('HR TOOL: CODE OPTIMIZATION EXECUTED');
+                showToast('CODE OPTIMIZATION COMPLETE');
+            }, 3500);
+        }
+
+        function executeHRCode() {
+            const code = document.getElementById('hrCodeInput').value;
+            const language = document.getElementById('hrLanguageSelect').value;
+            if (!code) return;
+            
+            document.getElementById('hrResults').classList.remove('hidden');
+            document.getElementById('hrResults').innerHTML += `
+                <div class="text-xs text-purple-400 mt-4">EXECUTING ${language.toUpperCase()} CODE...</div>
+                <div class="text-xs text-gray-400 font-mono mt-1">${code.substring(0, 100)}...</div>
+            `;
+            
+            setTimeout(() => {
+                document.getElementById('hrResults').innerHTML += `
+                    <div class="text-xs text-green-400 mt-2">CODE EXECUTION COMPLETE</div>
+                    <div class="text-xs text-gray-400 mt-1">
+                        OUTPUT: ${generateRandomOutput(language)}<br>
+                        EXECUTION TIME: ${(Math.random()*5+1).toFixed(2)}s<br>
+                        MEMORY USAGE: ${Math.floor(Math.random()*1024+256)}MB
+                    </div>
+                `;
+                document.getElementById('hrResults').scrollTop = document.getElementById('hrResults').scrollHeight;
+                addActivityLog(`HR TOOL: ${language.toUpperCase()} CODE EXECUTED`);
+                showToast('CODE EXECUTION COMPLETE');
+            }, 4000);
+        }
+
+        function generateRandomOutput(language) {
+            const outputs = {
+                python: [
+                    "Processed 42 data points with accuracy 97.3%",
+                    "Generated fibonacci sequence up to 1000",
+                    "Analyzed dataset with 1024 features"
+                ],
+                javascript: [
+                    "Rendered interactive visualization",
+                    "Processed 2048 API requests",
+                    "Completed async data pipeline"
+                ],
+                cpp: [
+                    "Compiled with 0 warnings",
+                    "Optimized matrix multiplication",
+                    "SIMD vector processing complete"
+                ],
+                java: [
+                    "JVM optimized bytecode execution",
+                    "Spring Boot service initialized",
+                    "Processed 5000 records"
+                ],
+                rust: [
+                    "Zero-cost abstraction achieved",
+                    "Memory-safe concurrency implemented",
+                    "High-performance networking layer"
+                ]
+            };
+            return outputs[language][Math.floor(Math.random() * outputs[language].length)];
+        }
+
+        function toggleHRCodeTheme() {
+            const editor = document.getElementById('hrCodeInput');
+            if (editor.classList.contains('bg-gray-900')) {
+                editor.classList.replace('bg-gray-900', 'bg-gray-800');
+                editor.classList.replace('text-green-400', 'text-cyan-400');
+                editor.classList.replace('border-gray-700', 'border-blue-400');
+            } else {
+                editor.classList.replace('bg-gray-800', 'bg-gray-900');
+                editor.classList.replace('text-cyan-400', 'text-green-400');
+                editor.classList.replace('border-blue-400', 'border-gray-700');
+            }
+        }
+function loadTerminal() {
+            const protectedIP = `192.168.${Math.floor(Math.random()*254)+1}.${Math.floor(Math.random()*254)+1}`;
+            const content = `
+                <div class="border border-gray-700 p-2 h-64 overflow-auto bg-black bg-opacity-50" id="terminalOutput">
+                    <div class="text-xs text-green-400">CYBERHUD TERMINAL - SIMULATION MODE</div>
+                    <div class="text-xs text-green-400">TYPE "HELP" FOR COMMANDS</div>
+                    <div class="text-xs text-red-400">IP PROTECTION ACTIVE: ${protectedIP}</div>
+                    <div class="text-xs text-gray-400 mt-4">></div>
+                </div>
+<div class="flex mt-2">
+                    <input type="text" id="terminalInput" class="flex-1 bg-gray-900 border border-gray-700 text-green-400 px-2 py-1" placeholder="ENTER COMMAND">
+                    <button onclick="executeCommand()" class="ml-2 bg-gray-800 border border-cyan-400 text-cyan-400 px-4 py-1 hover:bg-gray-700">EXECUTE</button>
+                </div>
+            `;
+            document.getElementById('toolContent').innerHTML = content;
+            
+            // Focus on input
+            document.getElementById('terminalInput').focus();
+            
+            // Allow Enter key to execute command
+            document.getElementById('terminalInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    executeCommand();
+                }
+            });
+        }
+
+        function executeCommand() {
+            const input = document.getElementById('terminalInput').value;
+            if (!input) return;
+            
+            // Add command to output
+            const terminalOutput = document.getElementById('terminalOutput');
+            terminalOutput.innerHTML += `<div class="text-xs text-green-400 mt-2">> ${input}</div>`;
+            
+            // Process command
+            let response = '';
+            const cmd = input.toLowerCase().trim();
+            
+            if (cmd === 'help') {
+                response = `
+                    AVAILABLE COMMANDS:<br>
+                    - help: Show this help<br>
+                    - clear: Clear terminal<br>
+                    - scan: Run simulation scan<br>
+                    - status: Show system status<br>
+                    - time: Show current time<br>
+                    - exit: Close terminal (just refreshes in this simulation)
+                `;
+            } else if (cmd === 'clear') {
+                terminalOutput.innerHTML = '<div class="text-xs text-green-400">TERMINAL CLEARED</div>';
+                document.getElementById('terminalInput').value = '';
+                return;
+            } else if (cmd === 'scan') {
+                response = `
+                    INITIATING SIMULATION SCAN...<br>
+                    SCANNING FAKE NETWORK...<br>
+                    FOUND 3 SIMULATED NODES<br>
+                    SCAN COMPLETE - NO REAL SYSTEMS AFFECTED
+                `;
+                addActivityLog('TERMINAL SCAN COMMAND EXECUTED');
+            } else if (cmd === 'status') {
+                response = `
+                    SYSTEM STATUS:<br>
+                    - MODE: SIMULATION<br>
+                    - SESSION: ACTIVE<br>
+                    - TOOLS: 7 LOADED<br>
+                    - SECURITY: MAXIMUM (SIMULATED)<br>
+                    - ALERTS: 0
+                `;
+            } else if (cmd === 'time') {
+                    response = `CURRENT TIME: ${new Date().toLocaleTimeString()}<br>PROTECTED IP: ${generateRandomIP()}`;
+} else if (cmd === 'exit') {
+                response = 'TERMINAL SESSION ENDED (SIMULATION ONLY - REFRESHING)';
+                setTimeout(() => loadTerminal(), 1500);
+            } else {
+                response = `COMMAND NOT FOUND: ${input} - TYPE "HELP" FOR AVAILABLE COMMANDS`;
+            }
+            
+            terminalOutput.innerHTML += `<div class="text-xs text-gray-400 mt-1">${response}</div>`;
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+            document.getElementById('terminalInput').value = '';
+        }
+
+        // Helper functions
+        function addActivityLog(message) {
+            const feed = document.getElementById('activityFeed');
+            feed.innerHTML = `<div class="text-xs text-green-400">[${new Date().toLocaleTimeString()}] ${message}</div>` + feed.innerHTML;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+        function generateRandomIP() {
+            return `192.168.${Math.floor(Math.random()*254)+1}.${Math.floor(Math.random()*254)+1}`;
+        }
+
+        function updateHexViewer() {
+const hexViewer = document.getElementById('hexViewer');
+            const lines = [];
+            const chars = '0123456789ABCDEF';
+            
+            for (let i = 0; i < 8; i++) {
+                let line = (i * 16).toString(16).padStart(4, '0') + ': ';
+                for (let j = 0; j < 16; j++) {
+                    line += chars[Math.floor(Math.random() * 16)] + chars[Math.floor(Math.random() * 16)] + ' ';
+                }
+                lines.push(line);
+            }
+            
+            hexViewer.innerHTML = lines.join('<br>');
+        }
+        // Initialize
+        feather.replace();
+        
+        // Update system time
+        function updateSystemTime() {
+            const now = new Date();
+            document.getElementById('systemTime').textContent = 
+                `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+        }
+        setInterval(updateSystemTime, 1000);
+        updateSystemTime();
+        // Update terminal IP protection periodically
+        function rotateTerminalIP() {
+            const terminal = document.getElementById('terminalOutput');
+            if (terminal) {
+                const ipDiv = terminal.querySelector('.text-red-400');
+                if (ipDiv) {
+                    ipDiv.textContent = `IP PROTECTION ACTIVE: ${generateRandomIP()}`;
+                }
+            }
+            setTimeout(rotateTerminalIP, 15000); // Rotate every 15 seconds
+        }
+        setTimeout(rotateTerminalIP, 15000);
+
+        // Add system alert simulation
+function simulateSystemAlert() {
+            setTimeout(() => {
+                const alerts = [
+                    "SIMULATED SECURITY ALERT: FAKE BREACH DETECTED",
+                    "SIMULATED NETWORK ALERT: FAKE TRAFFIC SPIKE",
+                    "SIMULATED SYSTEM ALERT: FAKE CPU OVERLOAD"
+                ];
+                const randomAlert = alerts[Math.floor(Math.random() * alerts.length)];
+                const alertFeed = document.getElementById('alertFeed');
+                alertFeed.innerHTML = `<div class="text-xs text-red-400 animate-pulse">${randomAlert}</div>` + alertFeed.innerHTML;
+                showToast(randomAlert);
+                
+                // Schedule next alert
+                setTimeout(simulateSystemAlert, Math.random() * 30000 + 30000); // 30-60 seconds
+            }, 10000); // First alert after 10 seconds
+        }
+        simulateSystemAlert();
+
+        // Add matrix rain effect to hex viewer
+        function matrixRainEffect() {
+            const hexViewer = document.getElementById('hexViewer');
+            const lines = hexViewer.innerHTML.split('<br>');
+            
+            // Randomly modify some characters
+            const modifiedLines = lines.map(line => {
+                if (Math.random() > 0.7) {
+                    const chars = line.split('');
+                    for (let i = 10; i < chars.length; i++) {
+                        if (Math.random() > 0.9) {
+                            chars[i] = Math.random() > 0.5 ? 
+                                String.fromCharCode(48 + Math.floor(Math.random() * 10)) : 
+                                String.fromCharCode(65 + Math.floor(Math.random() * 6));
+                        }
+                    }
+                    return chars.join('');
+                }
+                return line;
+            });
+            
+            hexViewer.innerHTML = modifiedLines.join('<br>');
+            setTimeout(matrixRainEffect, 100);
+        }
+        setTimeout(matrixRainEffect, 1000); // Start after 1 second
+    </script>
 </body>
 </html>
